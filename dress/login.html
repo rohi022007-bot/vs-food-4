@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="stylesheet" href="login.css">
+<link rel="stylesheet" href="login.js">
+<script> href="login.js"
+</script>
+ <div class="login-card" role="main" aria-labelledby="loginHeading">
+  <h1 id="loginHeading">Welcome Back</h1>
+  <p class="lead">Sign in to continue to your account</p>
+
+  <form id="loginForm" onsubmit="event.preventDefault(); /* handle login here */">
+    <div>
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@example.com" required autocomplete="email">
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="••••••••" required autocomplete="current-password" aria-describedby="pwHelp">
+      <!-- toggle button -->
+      <button type="button" id="togglePw" class="pw-toggle" aria-pressed="false" aria-label="Show password">
+        <!-- eye icon (closed by default) -->
+        <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </button>
+    </div>
+
+    <button class="login-btn" type="submit">Login</button>
+  </form>
+
+  <div class="footer-text">
+    No account?
+    <a href="https://accounts.google.com/signup" target="_blank" rel="noopener">Sign up with Google</a>
+  </div>
+</div>
+</head>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moralst</title>
+<link rel="stylesheet" href="intro style.css">
+<script src="intro.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<!-- ===== HEADER / TOP BAR ===== -->
+<header class="header">
+  <div class="header-right">
+    <a href="login.html"><i class="fa-regular fa-user"></i> Account</a>
+  </div>
+
+  <div class="header-center">
+    
+  </div>
+
+  <div class="left">
+    <a href="#"><i class="fa-solid fa-cart-shopping"></i> Cart</a>
+  </div>
+  
+</header>
+
+<!-- Floating Cart Button -->
+<button class="cart-btn" id="openCart">
+  <i class="fa-solid fa-cart-shopping"></i>
+  <span id="cartCount">0</span>
+</button>
+
+<!-- Floating Cart Drawer -->
+<div class="cart-drawer" id="cartDrawer">
+  <h3>Shopping Cart</h3>
+  <div id="cartItems"><p>Your cart is empty</p></div>
+  <p>Total: ₹<span id="cartTotal">0</span></p>
+  <button id="closeCart">Close</button>
+</div>
+
+<!-- ===== NAVIGATION BAR ===== -->
+<section class="menu-bar">
+  <ul>
+    <li><a href="#offer">OFFER</a></li>
+    <li><a href="#about">ABOUT</a></li>
+    <li><a href="#location">LOCATION</a></li>
+    <li><a href="#dress">DRESS</a></li>
+    <li><a href="#designing">DESIGNING</a></li>
+    <li><a href="#reviews">REVIEWS</a></li>
+  </ul>
+</section>
+
+<!-- ===== Advertisement Carousel ===== -->
+<section class="ads", id="offer">
+  <div class="ad-track">
+    <div class="ad-card">
+      <img src="image1/ad1.jpg" alt="Ad 1">
+    </div>
+    <div class="ad-card">
+      <img src="image1/ad1.jpg" alt="Ad 2">
+    </div>
+    <div class="ad-card">
+      <img src="image1/ad1.jpg" alt="Ad 3">
+    </div>
+    <div class="ad-card">
+      <img src="image1/ad1.jpg" alt="Ad 4">
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRODUCT GRID ===== -->
+<section class="products">
+  <div class="product-grid">
+    <div class="product-card">
+      <img src="" alt="">
+    </div>
+    <div class="product-card">
+      <img src="" alt="">
+    </div>
+    <div class="product-card">
+      <img src="" alt="">
+    </div>
+    <div class="product-card">
+      <img src="" alt="">
+    </div>
+  </div>
+</section>
+
+<!--About-->
+
+    <div class="about", di="About">
+        <div class="about_tag">
+            <h1>About Us</h1>
+            <p>
+                Welcome to MORALST, your one-stop destination for stylish, high-quality dresses that make you feel confident and beautiful. We believe fashion should be effortless and fun, so we carefully select fabrics and designs that combine comfort, elegance, and the latest trends. From everyday casuals to special-occasion outfits, every piece is crafted with attention to detail and premium materials. Our passion for style is matched only by our commitment to you—offering quick delivery, friendly support, and a shopping experience you can trust. Thank you for being part of our story—let’s make every day a stylish one!
+            </p>
+            <a href="#" class="about_btn">Learn More</a>
+        </div>
+        <section id="location">
+            <h1>Your Location</h1>
+
+            <button id="getLocationBtn">Get My Location</button>
+
+            <p id="locationResult">Click the button to see your location.</p>
+
+            <!-- Optional: map display -->
+            <div id="map"></div>
+        </section>
+        <script>
+            document.getElementById('getLocationBtn').addEventListener('click', () => {
+              const result = document.getElementById('locationResult');
+              const mapDiv = document.getElementById('map');
+
+              if (!navigator.geolocation) {
+                result.textContent = "Geolocation is not supported by your browser.";
+                return;
+              }
+
+              result.textContent = "Fetching your location…";
+
+              navigator.geolocation.getCurrentPosition(
+                (position) => {
+                  const lat = position.coords.latitude;
+                 const lon = position.coords.longitude;
+
+                  result.textContent = `Latitude: ${lat.toFixed(5)}, Longitude: ${lon.toFixed(5)}`;
+
+                  mapDiv.innerHTML = `<iframe
+                    width="100%"
+                    height="100%"
+                    style="border:0;"
+                    loading="lazy"
+                    allowfullscreen
+                    src="https://www.google.com/maps?q=${lat},${lon}&z=15&output=embed">
+                  </iframe>`;
+                },
+                (error) => {
+                  switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                      result.textContent = "Permission denied. Please allow location access.";
+                      break;
+                    case error.POSITION_UNAVAILABLE:
+                      result.textContent = "Location information is unavailable.";
+                      break;
+                    case error.TIMEOUT:
+                      result.textContent = "Location request timed out.";
+                      break;
+                    default:
+                      result.textContent = "An unknown error occurred.";
+                  }
+                }
+              );
+            });
+        </script>
+
+    </div>
+
+<!-- ===== Dress Section ===== -->
+<section class="products" id="dress">
+  <h5>dress</h5>
+  <div class="product-grid">
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+1" alt="Dress 1">
+      <h4>Summer Floral Dress</h4>
+      <p class="price">$49.99</p>
+      <button href="dress.html">Add to cart</button>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+2" alt="Dress 2">
+      <h4>Evening Gown</h4>
+      <p class="price">$79.99</p>
+      <button href="dress.html">Add to cart</button>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+3" alt="Dress 3">
+      <h4>Casual Maxi Dress</h4>
+      <p class="price">$39.99</p>
+      <button href="dress.html">Add to cart</button>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+4" alt="Dress 4">
+      <h4>Party Dress</h4>
+      <p class="price">$59.99</p>
+      <button href="dress.html">Add to cart</button>
+    </div>
+  </div>
+  <div class="product-grid">
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+1" alt="Dress 1">
+      <h4>Summer Floral Dress</h4>
+      <p class="price">$49.99</p>
+      <button href="dress.html">Add to cart</button>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+2" alt="Dress 2">
+      <h4>Evening Gown</h4>
+      <p class="price">$79.99</p>
+      <button href="dress.html">Add to cart</button>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+3" alt="Dress 3">
+      <h4>Casual Maxi Dress</h4>
+      <p class="price">$39.99</p>
+      <button href="dress.html">Add to cart</button>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+4" alt="Dress 4">
+      <h4>Party Dress</h4>
+      <p class="price">$59.99</p>
+      <button href="dress.html">Add to cart</button>
+    </div>
+  </div>
+  <div class="product-grid">
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+1" alt="Dress 1">
+      <h4>Summer Floral Dress</h4>
+      <p class="price">$49.99</p>
+      <button href="dress.html">Add to cart</button>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+2" alt="Dress 2">
+      <h4>Evening Gown</h4>
+      <p class="price">$79.99</p>
+     <button href="dress.html">Add to cart</button>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+3" alt="Dress 3">
+      <h4>Casual Maxi Dress</h4>
+      <p class="price">$39.99</p>
+      <button href="dress.html">Add to cart</button>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+4" alt="Dress 4">
+      <h4>Party Dress</h4>
+      <p class="price">$59.99</p>
+      <button href="dress.html">Add to cart</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Dress designing Section ===== -->
+<section1 class="products" id="designing">
+  <h5>dress designing</h5>
+  <div class="product-grid">
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+1" alt="Dress 1">
+      <h4>Summer Floral Dress</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+2" alt="Dress 2">
+      <h4>Evening Gown</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+3" alt="Dress 3">
+      <h4>Casual Maxi Dress</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+4" alt="Dress 4">
+      <h4>Party Dress</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+  </div>
+  <div class="product-grid">
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+1" alt="Dress 1">
+      <h4>Summer Floral Dress</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+2" alt="Dress 2">
+      <h4>Evening Gown</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+3" alt="Dress 3">
+      <h4>Casual Maxi Dress</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+4" alt="Dress 4">
+      <h4>Party Dress</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+  </div>
+  <div class="product-grid">
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+1" alt="Dress 1">
+      <h4>Summer Floral Dress</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+2" alt="Dress 2">
+      <h4>Evening Gown</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+3" alt="Dress 3">
+      <h4>Casual Maxi Dress</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/200x250?text=Dress+4" alt="Dress 4">
+      <h4>Party Dress</h4>
+      <a href="dress designing.html">Designing</a>
+    </div>
+  </div>
+</section1>
+
+
+<!-- ===== REVIEWS ===== -->
+<div class="reviews", id="reviews">
+        <h1>Reviews</h1>
+
+        <div class="review_box">
+
+            <div class="review_card">
+                <i class="fa-solid fa-quote-right"></i>
+                <div class="card_top">
+                    <img src="">
+                </div>
+                <div class="card">
+                    <h2></h2>
+                    <p>
+                    </p>
+                    <div class="review_icon">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="review_card">
+                <i class="fa-solid fa-quote-right"></i>
+                <div class="card_top">
+                    <img src="">
+                </div>
+                <div class="card">
+                    <h2></h2>
+                    <p>
+                    </p>
+                    <div class="review_icon">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star-half-stroke"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="review_card">
+                <i class="fa-solid fa-quote-right"></i>
+                <div class="card_top">
+                    <img src="">
+                </div>
+                <div class="card">
+                    <h2></h2>
+                    <p>
+                    </p>
+                    <div class="review_icon">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="review_card">
+                <i class="fa-solid fa-quote-right"></i>
+                <div class="card_top">
+                    <img src="">
+                </div>
+                <div class="card">
+                    <h2></h2>
+                    <p>
+                     
+                    </p>
+                    <div class="review_icon">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+<!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="footer_main">
+
+            <div class="tag">
+                <img src="">
+                <p>
+                    The editing software is easy to use, with a clean interface and a wide range of features suitable for both beginners and professionals. It offers smooth transitions, customizable effects, and quick export options. While it handles most tasks efficiently, performance can dip slightly during heavy projects or high-resolution exports.
+                </p>
+
+            </div>
+
+            <div class="tag">
+                <h1>Quick Link</h1>
+                <a href="#offer">Offer</a>
+                <a href="#about">About</a>
+                <a href="#dress">Dress</a>
+                <a href="#designing">Designing</a>
+                <a href="#reviews">Reviews</a>
+                
+            </div>
+
+            <div class="tag">
+                <h1>Contact Info</h1>
+                <a href="#"><i class="fa-solid fa-phone"></i>+91 8248299098</a>
+                <a href="#"><i class="fa-solid fa-phone"></i>+91 6379367744</a>
+                <a href="#"><i class="fa-solid fa-envelope"></i>lokee2005@gmail.com</a>
+                
+            </div>
+
+            <div class="tag">
+                <h1>Follow Us</h1>
+                <div class="social_link">
+                    <i class="fa-brands fa-facebook-f"></i>
+                    <i class="fa-brands fa-instagram"></i>
+                    <i class="fa-brands fa-twitter"></i>
+                    <i class="fa-brands fa-linkedin-in"></i>
+                </div>
+                
+            </div>
+
+            <div class="tag">
+                <h1>News Letter</h1>
+                <div class="search_bar">
+                    <input type="text" placeholder="You email id here">
+                    <button type="submit">Subscribe</button>
+                </div>                
+            </div>            
+            
+        </div>
+
+        <p class="end">Design By<span><i class="fa-solid fa-face-grin"></i> Hunter FF</span></p>
+
+    </footer>
+
+
+</body>
+</html>

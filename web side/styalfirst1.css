@@ -1,0 +1,74 @@
+@import url("https://fonts.googleappis.com/css2?family=poppins:wght@300;400;500;600;700;800;900&display=swap");
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "poppins",sans-serif;
+
+}
+body
+{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background:url(back1.jpg)no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+.wrapper h1 
+{
+    font-size: 70px;
+    text-align: justify;
+    text-shadow: 10px;
+    color:rgb(234, 94, 7);
+    outline: rgb(255, 255, 255);
+    top:10%;
+}
+
+.wrapper.input-box
+{
+    position:centre;
+    width: 10000%;
+    height: 40px;
+    margin: 100px 0;
+}
+.input-box i{
+    position: absolute;
+    right: 100px;
+    top: 500%;
+    transform: translateY(-50%);
+    font-size: 20px;
+}
+
+.input-box a 
+{
+    width: 100%;
+    position:center;
+    right: 100px;
+    top: 11000%;
+    height: 500%;
+    background: transparent;
+    border: none;
+    outline: none;
+    border: 2px solid rgba(4, 74, 83, 0.933);
+    border-radius: 20px;
+    font-size: 40px;
+    box-shadow: 10px;
+    color: #f5bf42;
+    padding: 10px 45px 10px 20px ;
+}
+
+
+.input-box a::placeholder{
+    color:red;
+}
+
+.input-box i{
+    position: absolute;
+    right: 20px;
+    top: 1000%;
+    transform: translateY(-50%);
+    font-size: 20px;
+}

@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dress Editor — Live Preview</title>
+  <link rel="stylesheet" href="dress.css">
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --panel:#ffffff;
+      --accent:#6b5cff;
+      --muted:#657786;
+      --card-radius:14px;
+    }
+    *{box-sizing:border-box;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#eef3f8);color:#111;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+
+    .app{width:1100px;max-width:96%;display:grid;grid-template-columns:1fr 420px;gap:24px}
+
+    .canvas{background:var(--panel);border-radius:var(--card-radius);padding:28px;box-shadow:0 8px 30px rgba(15,20,30,0.06);display:flex;align-items:center;justify-content:center}
+    .editor{background:var(--panel);border-radius:var(--card-radius);padding:20px;box-shadow:0 6px 20px rgba(15,20,30,0.05);overflow:auto}
+
+    header{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+    header h1{font-size:18px;margin:0}
+    header p{margin:0;color:var(--muted);font-size:13px}
+
+    /* Dress area */
+    .mannequin{width:520px;height:720px;display:flex;align-items:center;justify-content:center}
+    svg{width:360px;height:640px}
+
+    /* Controls */
+    .section{margin-bottom:18px}
+    label{display:block;font-weight:600;margin-bottom:8px;font-size:13px}
+    .row{display:flex;gap:10px;align-items:center}
+    .control{background:#fafbfd;border-radius:10px;padding:10px;border:1px solid rgba(10,20,30,0.03)}
+    input[type=color]{width:44px;height:44px;border-radius:8px;border:0;padding:0}
+    select, input[type=range]{width:100%}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* Pattern preview */
+    .pattern-list{display:flex;gap:8px}
+    .pattern-item{width:54px;height:44px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer}
+    .pattern-item.selected{outline:3px solid rgba(107,92,255,0.14)}
+
+    /* Footer actions */
+    .actions{display:flex;gap:10px;margin-top:10px}
+    .btn{background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px;border:0;cursor:pointer}
+    .btn.secondary{background:transparent;color:var(--accent);border:1px solid rgba(107,92,255,0.12)}
+
+    /* small helper */
+    .muted{color:var(--muted);font-size:13px}
+
+  </style>
+</head>
+<body>
+  <div class="app" role="application">
+    <div class="canvas" aria-label="Dress preview">
+      <div style="width:100%;max-width:540px">
+        <header>
+          <div>
+            <h1>Dress Editor Live Preview</h1>
+            <p class="muted">Edit color, pattern and design — changes appear instantly on the mannequin.</p>
+          </div>
+        </header>
+        </div>
+      </div>
+    </div>
+
+    <aside class="editor" aria-label="Editor controls">
+      <div class="section">
+        <label for="colorPicker">Dress color</label>
+        <div class="row">
+          <div class="control"><input id="colorPicker" type="color" value="#6b5cff" title="Pick base color"></div>
+          <div style="flex:1">
+            <div class="small muted">Quick swatches</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="pattern-item" data-color="#6b5cff" style="background:#6b5cff;border:none"></button>
+              <button class="pattern-item" data-color="#ff6b6b" style="background:#ff6b6b;border:none"></button>
+              <button class="pattern-item" data-color="#3db7b7" style="background:#3db7b7;border:none"></button>
+              <button class="pattern-item" data-color="#f7c948" style="background:#f7c948;border:none"></button>
+              <button class="pattern-item" data-color="#6b5cff" style="background:#61ff5c;border:none"></button>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="pattern-item" data-color="#6b5cff" style="background:#6b5cff;border:none"></button>
+              <button class="pattern-item" data-color="#ff6b6b" style="background:#ff6b6b;border:none"></button>
+              <button class="pattern-item" data-color="#3db7b7" style="background:#3db7b7;border:none"></button>
+              <button class="pattern-item" data-color="#f7c948" style="background:#f7c948;border:none"></button>
+              <button class="pattern-item" data-color="#6b5cff" style="background:#61ff5c;border:none"></button>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="pattern-item" data-color="#6b5cff" style="background:#6b5cff;border:none"></button>
+              <button class="pattern-item" data-color="#ff6b6b" style="background:#ff6b6b;border:none"></button>
+              <button class="pattern-item" data-color="#3db7b7" style="background:#3db7b7;border:none"></button>
+              <button class="pattern-item" data-color="#f7c948" style="background:#f7c948;border:none"></button>
+              <button class="pattern-item" data-color="#6b5cff" style="background:#61ff5c;border:none"></button>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="pattern-item" data-color="#6b5cff" style="background:#6b5cff;border:none"></button>
+              <button class="pattern-item" data-color="#ff6b6b" style="background:#ff6b6b;border:none"></button>
+              <button class="pattern-item" data-color="#3db7b7" style="background:#3db7b7;border:none"></button>
+              <button class="pattern-item" data-color="#f7c948" style="background:#f7c948;border:none"></button>
+              <button class="pattern-item" data-color="#6b5cff" style="background:#61ff5c;border:none"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <label>Pattern</label>
+        <div class="pattern-list">
+          <div class="pattern-item selected" data-pattern="none">None</div>
+          <div class="pattern-item" data-pattern="stripes">Stripes</div>
+          <div class="pattern-item" data-pattern="polka">Polka</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <label for="design">Design style</label>
+        <select id="design">
+          <option value="a-line">A-line (default)</option>
+          <option value="mermaid">Mermaid (fitted)</option>
+          <option value="shift">Shift (straight)</option>
+        </select>
+      </div>
+
+      <div class="section">
+        <label>Download / Actions</label>
+        <div class="actions">
+          <button class="btn" id="downloadBtn">Download PNG</button>
+          <button class="btn secondary" id="resetBtn">Reset</button>
+        </div>
+      </div>
+
+      <div class="section muted" style="font-size:12px">
+        Tip: You can combine color + pattern and tweak sleeve length or switch design styles to explore new looks.
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // Elements
+    const colorPicker = document.getElementById('colorPicker');
+    const patternItems = document.querySelectorAll('[data-pattern]');
+    const swatches = document.querySelectorAll('[data-color]');
+    const skirt = document.getElementById('skirt');
+    const bodice = document.getElementById('bodice');
+    const leftSleeve = document.getElementById('left-sleeve');
+    const rightSleeve = document.getElementById('right-sleeve');
+    const accessory = document.getElementById('accessory');
+    const toggleAccessory = document.getElementById('toggleAccessory');
+    const designSelect = document.getElementById('design');
+    const sleeveRange = document.getElementById('sleeveRange');
+    const sleeveVal = document.getElementById('sleeveVal');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // Apply base color
+    function applyColor(hex){
+      [skirt, bodice, leftSleeve, rightSleeve].forEach(el => {
+        el.style.fill = hex;
+      });
+      colorPicker.value = hex;
+    }
+
+    // Apply pattern (none | stripes | polka)
+    function applyPattern(name){
+      if(name === 'none'){
+        skirt.style.fill = getComputedStyle(skirt).fill || colorPicker.value;
+        bodice.style.fill = getComputedStyle(bodice).fill || colorPicker.value;
+        leftSleeve.style.fill = '';
+        rightSleeve.style.fill = '';
+
+        // remove pattern usage by setting fill to solid color
+        const c = colorPicker.value;
+        [skirt, bodice, leftSleeve, rightSleeve].forEach(el=> el.setAttribute('fill', c));
+      } else if(name === 'stripes'){
+        // use pattern id; pattern color comes from the fill of the element and the pattern rect default
+        skirt.setAttribute('fill', 'url(#pattern-stripes)');
+        bodice.setAttribute('fill', 'url(#pattern-stripes)');
+        leftSleeve.setAttribute('fill', 'url(#pattern-stripes)');
+        rightSleeve.setAttribute('fill', 'url(#pattern-stripes)');
+        // set the color of the pattern by applying a mask color to a descendent rect -- we approximate by setting pattern's rect fill via style injection
+        updatePatternColors(colorPicker.value);
+      } else if(name === 'polka'){
+        skirt.setAttribute('fill','url(#pattern-polka)');
+        bodice.setAttribute('fill','url(#pattern-polka)');
+        leftSleeve.setAttribute('fill','url(#pattern-polka)');
+        rightSleeve.setAttribute('fill','url(#pattern-polka)');
+        updatePatternColors(colorPicker.value);
+      }
+    }
+
+    function updatePatternColors(hex){
+      // tweak pattern shapes inside defs to reflect the chosen color via inline fill attributes
+      const stripeRect = document.querySelector('#pattern-stripes rect');
+      if(stripeRect) stripeRect.setAttribute('fill', hex);
+      const polkaCircles = document.querySelectorAll('#pattern-polka circle');
+      polkaCircles.forEach(c => c.setAttribute('fill', hex));
+    }
+
+    // initial
+    applyColor('#6b5cff');
+    applyPattern('none');
+
+    // events
+    colorPicker.addEventListener('input', (e)=>{
+      const c = e.target.value;
+      applyColor(c);
+      // if pattern is active, reapply to update pattern fill
+      const activePattern = document.querySelector('.pattern-item.selected').dataset.pattern;
+      if(activePattern !== 'none') updatePatternColors(c);
+    });
+
+    patternItems.forEach(pi=>{
+      pi.addEventListener('click', ()=>{
+        patternItems.forEach(p=>p.classList.remove('selected'));
+        pi.classList.add('selected');
+        applyPattern(pi.dataset.pattern);
+      });
+    });
+
+    swatches.forEach(s=> s.addEventListener('click', ()=> applyColor(s.dataset.color)));
+
+    toggleAccessory.addEventListener('change', ()=>{
+      accessory.style.display = toggleAccessory.checked ? 'block' : 'none';
+    });
+
+    designSelect.addEventListener('change', ()=>{
+      const v = designSelect.value;
+      if(v === 'a-line'){
+        skirt.setAttribute('d','M120 180 C40 260 30 360 80 410 L230 410 C270 360 230 260 160 180 Z');
+      } else if(v === 'mermaid'){
+        skirt.setAttribute('d','M120 180 C110 240 120 300 160 350 L170 410 L220 410 C230 360 200 260 160 180 Z');
+      } else if(v === 'shift'){
+        skirt.setAttribute('d','M120 180 L120 340 L230 340 L230 180 Z');
+      }
+    });
+
+    sleeveRange.addEventListener('input', ()=>{
+      const v = +sleeveRange.value; // 0..100
+      // Calc new sleeve path by morphing control points (simple approximation): the higher the value, the longer/more puffy the sleeve
+      const short = 'M80 120 C68 130 70 150 88 150 C86 135 88 125 80 120 Z';
+      const long = 'M60 110 C50 150 70 200 100 190 C86 160 88 125 80 120 Z';
+      // linear interpolation not done precisely — choose between two presets depending on threshold
+      if(v < 40){
+        leftSleeve.setAttribute('d', short);
+        rightSleeve.setAttribute('d', 'M232 120 C244 130 242 150 224 150 C226 135 224 125 232 120 Z');
+        sleeveVal.textContent = '(short)';
+      } else if(v < 70){
+        leftSleeve.setAttribute('d', 'M72 116 C62 140 74 170 92 162 C86 145 88 130 80 120 Z');
+        rightSleeve.setAttribute('d', 'M222 116 C232 140 220 170 202 162 C210 145 208 130 216 120 Z');
+        sleeveVal.textContent = '(medium)';
+      } else {
+        leftSleeve.setAttribute('d', long);
+        rightSleeve.setAttribute('d', 'M244 110 C254 150 232 200 202 190 C216 160 208 125 216 120 Z');
+        sleeveVal.textContent = '(long)';
+      }
+    });
+
+    // download: rasterize SVG to PNG
+    downloadBtn.addEventListener('click', ()=>{
+      const svg = document.getElementById('dress-svg');
+      const serializer = new XMLSerializer();
+      const source = serializer.serializeToString(svg);
+      const svgBlob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.onload = function(){
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        // white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0);
+        const a = document.createElement('a');
+        a.download = 'dress-preview.png';
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      img.src = url;
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      applyColor('#6b5cff');
+      document.querySelectorAll('.pattern-item').forEach(p=>p.classList.remove('selected'));
+      document.querySelector('[data-pattern="none"]').classList.add('selected');
+      applyPattern('none');
+      designSelect.value = 'a-line';
+      sleeveRange.value = 20;
+      sleeveVal.textContent = '(short)';
+      toggleAccessory.checked = false;
+      accessory.style.display = 'none';
+    });
+
+  </script>
+</body>
+</html>
