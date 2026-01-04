@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VS Food Products - Herbal Store</title>
+    <!-- Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" xintegrity="sha512-Fo3rlrZj/k7ujTnHg4Cfm86y0G3o23F2sQ8GgV9t55U6b/jX6oW8rC5P+b5/k9U3S0c+0N/9G2vR4C1F8yA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Set default font to Inter and customize scrollbar for aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fee7; /* Light green background */
+        }
+        .scrollable-content {
+            /* Custom Scrollbar for a cleaner look */
+            overflow-y: auto;
+            max-height: calc(100vh - 120px);
+        }
+        .scrollable-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background-color: #a7f3d0; /* Emerald 200 */
+            border-radius: 4px;
+        }
+        .scrollable-content::-webkit-scrollbar-track {
+            background-color: #f0fdf4; /* Green 50 */
+        }
+
+        /* Message Box Styling */
+        #message-box {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 50; /* Above all other content */
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        /* Modal Backdrop */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div id="message-box"></div>
+
+    <!-- Header & Navigation -->
+    <header class="bg-green-700 shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <!-- Logo/Title -->
+            <h1 class="text-2xl font-extrabold text-white tracking-tight">
+                <i class="fas fa-seedling mr-2"></i>VS Food Products
+            </h1>
+            
+            <!-- Navigation Buttons -->
+            <div id="nav-buttons" class="flex space-x-3 items-center">
+                <!-- Buttons are injected here by renderNavigation() -->
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 scrollable-content">
+        <div id="content-area">
+            <!-- Dynamic content (product lists, cart, checkout) is injected here -->
+        </div>
+    </main>
+
+    <!-- Order Success Modal (Hidden by Default) -->
+    <div id="order-modal" class="modal-backdrop hidden" onclick="if(event.target === this) hideOrderSuccessModal()">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl max-w-lg w-full transform transition-all duration-300 scale-100 mx-4" onclick="event.stopPropagation()">
+            <h2 class="text-3xl font-bold text-green-700 mb-4 flex items-center">
+                <i class="fas fa-check-circle mr-3"></i>Order Confirmed!
+            </h2>
+            <p class="text-gray-600 mb-4">Thank you for your purchase. Details are below:</p>
+            <div id="modal-content" class="bg-gray-50 p-4 rounded-lg text-sm border border-gray-200">
+                <!-- Order summary injected here -->
+            </div>
+            <div class="mt-6 flex justify-end space-x-3 modal-action-buttons">
+                <!-- Action buttons injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 1. PRODUCT & RATE DATA (Prices are in Indian Rupees - ₹) ---
+        
+        // Defined specific Pincodes with fixed, lower rates (overrides general rate)
+        const SPECIFIC_DELIVERY_RATES = {
+            // Pincode (as string) : cost
+            "600001": 50.00,
+            "600045": 75.00,
+            "631501": 120.00,
+            "602001": 150.00,
+        }; 
+        
+        // Defined the broad Pincode range and rates
+        const MIN_PINCODE = 600001;
+        const MAX_PINCODE = 643240;
+        const STANDARD_ZONE_COST = 50.00; // Rate for any Pincode in the range but not in SPECIFIC_DELIVERY_RATES
+        const OUT_OF_RANGE_COST = -1.00; // Sentinel value for unavailable delivery (-1.00 used for clarity)
+
+        const PRODUCTS = {
+            'soap': {
+                name: "Homemade Soap",
+                icon: "fas fa-bath",
+                products: [
+                    { id: 's1', name: 'Lavender Calm Bar', price: 80.00, desc: 'Relaxing, small-batch cold process soap.', image_hint: 'Lavender Soap Bar' },
+                    { id: 's2', name: 'Coffee Scrub Soap', price: 95.00, desc: 'Exfoliating and energizing with fresh coffee grounds.', image_hint: 'Coffee Scrub Soap' },
+                ]
+            },
+            'hair': { 
+                name: "Hair Products",
+                icon: "fas fa-spray-can",
+                products: [
+                    { id: 'h1', name: 'Hair Dye (Natural Herbal)', price: 250.00, desc: 'Natural herbal formula for long-lasting, chemical-free color.', image_hint: 'Herbal Hair Dye Powder' },
+                    { id: 'h2', name: 'Nourishing Hair Oil', price: 180.00, desc: 'Deeply nourishing oil blend for strength, anti-breakage, and shine.', image_hint: 'Ayurvedic Hair Oil Bottle' },
+                    { id: 'h3', name: 'Herbal Shampoo (Daily Care)', price: 160.00, desc: 'Gentle cleansing shampoo with traditional herbs for everyday use.', image_hint: 'Herbal Shampoo Bottle' },
+                    { id: 'h4', name: 'Hibiscus Hair Fall Control Shampoo', price: 175.00, desc: 'Formulated with hibiscus extract to prevent hair fall and promote growth.', image_hint: 'Hibiscus Shampoo Leaf' },
+                    { id: 'h5', name: 'Neem & Basil Shampoo', price: 165.00, desc: 'Anti-bacterial properties of Neem for scalp health and soothing.', image_hint: 'Neem Basil Shampoo' },
+                    { id: 'h6', name: 'Anti-Dandruff Hair Oil', price: 190.00, desc: 'Specialized blend to combat dandruff, soothe scalp irritation, and moisturize.', image_hint: 'Anti-Dandruff Oil' },
+                    { id: 'h7', name: 'Anti-Dandruff Hair Shampoo', price: 185.00, desc: 'Effective cleansing formula to control flakes and itching, restoring scalp balance.', image_hint: 'Anti-Dandruff Shampoo' },
+                ]
+            },
+            'cosmetics': { 
+                name: "Cosmetic Products",
+                icon: "fas fa-palette",
+                products: [
+                    { id: 'c1', name: 'Carrot Face Oil', price: 220.00, desc: 'Rich in Vitamin A, helps reduce blemishes, smooth skin, and provide natural glow.', image_hint: 'Carrot Seed Face Oil' },
+                    { id: 'c2', name: 'Herbal Deep Clean Face Pack', price: 140.00, desc: 'Clay-based mask with potent herbs for deep pore cleansing and detoxification.', image_hint: 'Herbal Clay Face Pack' },
+                    { id: 'c3', name: 'Herbal Moisturizing Lipstick', price: 280.00, desc: 'Moisturizing color from natural extracts; provides vibrant color and hydration.', image_hint: 'Natural Herbal Lipstick' },
+                    { id: 'c4', name: 'Herbal Muscara (Lengthening)', price: 195.00, desc: 'Lengthening and volumizing formula made with botanical waxes and oils.', image_hint: 'Herbal Mascara Tube' },
+                    { id: 'c5', name: 'Herbal Kajal (Traditional)', price: 130.00, desc: 'Traditional eye liner, made with soothing herbal extracts for safe daily use.', image_hint: 'Natural Kajal Eye Liner' },
+                    { id: 'c6', name: 'Herbal Hydrating Face Mask', price: 150.00, desc: 'A soothing and nourishing mask for intense hydration and skin repair.', image_hint: 'Hydrating Herbal Face Mask' },
+                    { id: 'c7', name: 'Herbal Daily Face Cream', price: 260.00, desc: 'Lightweight daily cream enriched with natural moisturizers for soft skin.', image_hint: 'Herbal Daily Face Cream' },
+                    { id: 'c8', name: 'Herbal Foaming Face Wash', price: 155.00, desc: 'Gentle foaming wash that cleanses thoroughly without stripping natural oils.', image_hint: 'Herbal Foaming Face Wash' },
+                    { id: 'c9', name: 'Nourishing Body Lotion', price: 210.00, desc: 'Light, non-greasy formula with shea butter for all-day skin hydration.', image_hint: 'Natural Body Lotion' },
+                    { id: 'c10', name: 'Tinted Lip Balm (Beet/Carrot)', price: 90.00, desc: 'Hydrating balm with a natural tint from beetroot and carrot extracts.', image_hint: 'Beetroot Carrot Lip Balm' },
+                ]
+            },
+            'eatable': {
+                name: "Eatable Items",
+                icon: "fas fa-cookie-bite",
+                products: [
+                    { id: 'e1', name: 'Almond Butter Cookies', price: 100.00, desc: 'Gluten-free, made with raw almond butter.', image_hint: 'Almond Butter Cookies' },
+                    { id: 'e2', name: 'Spicy Herb Mix', price: 65.00, desc: 'Hand-blended spice mix for seasoning.', image_hint: 'Spicy Herb Mix Jar' },
+                ]
+            },
+            'tea': {
+                name: "Tea Products",
+                icon: "fas fa-mug-hot",
+                products: [
+                    { id: 't1', name: 'Hibiscus Tea', price: 110.00, desc: 'Vibrant, tart tea from hibiscus flower and powder.', image_hint: 'Hibiscus Flower Tea Powder' },
+                    { id: 't2', name: 'Blue Pea Tea', price: 130.00, desc: 'Naturally blue tea with antioxidant properties.', image_hint: 'Blue Pea Flower Tea' },
+                    { id: 't3', name: 'Herbal Tea', price: 90.00, desc: 'A soothing blend of traditional herbs and spices.', image_hint: 'Mixed Herbs Spices Tea' },
+                    { id: 't4', name: 'Sugar Detox Tea', price: 150.00, desc: 'Designed to support blood sugar management.', image_hint: 'Cinnamon Herbs Detox Tea' },
+                    { id: 't5', name: 'Fat Burn Tea', price: 160.00, desc: 'Metabolism-boosting blend of green tea and spices.', image_hint: 'Green Tea Leaves Spices' },
+                    { id: 't6', name: 'Java Plum Tea', price: 125.00, desc: 'Made from Java plum seeds, beneficial for health.', image_hint: 'Java Plum Seed Tea' },
+                    { id: 't7', name: 'Immunity Tea', price: 140.00, desc: 'Packed with immunity-boosting natural ingredients.', image_hint: 'Turmeric Ginger Lemon Tea' },
+                    { id: 't8', name: 'Avarampoo Tea', price: 105.00, desc: 'Traditional South Indian herbal tea from Avaram Senna flowers.', image_hint: 'Avarampoo Flower Tea' },
+                    { id: 't9', name: 'Rose Petal Tea', price: 95.00, desc: 'Fragrant and delicate tea made from dried rose petals.', image_hint: 'Rose Petals Dried Tea' }
+                ]
+            }
+        };
+
+        // --- 2. GLOBAL STATE & UTILITIES ---
+        let cart = {}; // Stores { productId: quantity }
+        
+        // Order history array for demonstration
+        let submittedOrders = [
+            {
+                id: 'VS-24001',
+                date: '14/11/2024, 10:30:00',
+                total: 560.00,
+                deliveryCost: 50.00,
+                paymentMethod: 'cod', // Added to mock data
+                deliveryStatus: 'Specific Zone Rate (₹50.00)',
+                customer: { name: 'Demo Customer', phone: '90035XXXXX', email: 'demo@example.com', deliveryPincode: 600001, deliveryAddress: '123 Main St, Chennai' },
+                items: [
+                    { name: 'Lavender Calm Bar', price: 80.00, quantity: 2 },
+                    { name: 'Nourishing Hair Oil', price: 180.00, quantity: 1 },
+                    { name: 'Carrot Face Oil', price: 220.00, quantity: 1 }
+                ]
+            },
+            {
+                id: 'VS-24002',
+                date: '15/11/2024, 15:45:00',
+                total: 430.00,
+                deliveryCost: 150.00,
+                paymentMethod: 'online', // Added to mock data
+                deliveryStatus: 'Specific Zone Rate (₹150.00)',
+                customer: { name: 'Demo Customer', phone: '90035XXXXX', email: 'demo@example.com', deliveryPincode: 602001, deliveryAddress: '456 West St, Kancheepuram' },
+                items: [
+                    { name: 'Hibiscus Tea', price: 110.00, quantity: 1 },
+                    { name: 'Tinted Lip Balm (Beet/Carrot)', price: 90.00, quantity: 1 }
+                ]
+            }
+        ];
+        
+        let customerDetails = { 
+            name: '', 
+            phone: '', 
+            email: '', 
+            deliveryAddress: '',
+            deliveryPincode: 0, 
+            deliveryCost: 0.00, 
+            deliveryStatus: 'No Pincode Entered',
+            paymentMethod: 'cod', // NEW: Default to Cash on Delivery
+        };
+        let currentView = 'welcome';
+        
+        const contentArea = document.getElementById('content-area');
+        const messageBox = document.getElementById('message-box');
+        const navButtonsEl = document.getElementById('nav-buttons'); 
+        
+        /** Generates a descriptive placeholder image URL. */
+        const getPlaceholderImage = (text) => {
+            // Placeholder colors match Green theme (light green bg: dcfce7, dark green text: 166534)
+            const placeholderText = encodeURIComponent(text.replace(/ /g, '+').slice(0, 25)); 
+            return `https://placehold.co/150x150/dcfce7/166534?text=${placeholderText}`;
+        }
+
+        /** Shows a temporary message to the user (replaces alert()). */
+        function showMessage(message, type = 'success') {
+            const el = document.createElement('div');
+            const color = type === 'success' ? 'bg-green-600' : 'bg-red-500'; 
+            el.className = `${color} text-white px-4 py-3 rounded-xl shadow-xl transition-all duration-300`;
+            el.textContent = message;
+
+            messageBox.appendChild(el);
+
+            setTimeout(() => {
+                el.classList.add('opacity-0', 'scale-90');
+                el.addEventListener('transitionend', () => messageBox.removeChild(el));
+            }, 3000);
+        }
+
+        /** Calculates the delivery cost based on the Pincode range logic. */
+        function calculateDeliveryCost(pincode) {
+            const pinStr = pincode.toString();
+
+            // 1. Check for specific, fixed rate overrides
+            if (SPECIFIC_DELIVERY_RATES[pinStr] !== undefined) {
+                return { cost: SPECIFIC_DELIVERY_RATES[pinStr], status: `Specific Zone Rate (₹${SPECIFIC_DELIVERY_RATES[pinStr].toFixed(2)})` };
+            }
+
+            const pinNum = parseInt(pinStr);
+
+            // 2. Check for the broad requested range (600001 to 643240)
+            if (pinNum >= MIN_PINCODE && pinNum <= MAX_PINCODE) {
+                return { cost: STANDARD_ZONE_COST, status: `TN Zone Rate (₹${STANDARD_ZONE_COST.toFixed(2)})` };
+            }
+
+            // 3. Out of range or invalid format
+            return { cost: OUT_OF_RANGE_COST, status: 'Delivery Unavailable / Out of Range' };
+        }
+        
+        /** Hides the order success modal and returns to the welcome screen. */
+        function hideOrderSuccessModal() {
+            document.getElementById('order-modal').classList.add('hidden');
+            // Clear the cart after successful order
+            cart = {};
+            // Return to the welcome page
+            changeView('welcome');
+        }
+
+        /** Shows the modal after order "submission" to display the total amount and order details. */
+        function showOrderSuccessModal(orderSummary) {
+            const modalEl = document.getElementById('order-modal');
+            const modalContent = document.getElementById('modal-content');
+            const modalBody = modalEl.querySelector('div');
+
+            // Remove any previously injected action buttons
+            modalBody.querySelectorAll('.modal-action-buttons').forEach(el => el.remove());
+            
+            // Determine display text for cost 
+            const deliveryCostText = orderSummary.deliveryCost >= 0 ? 
+                `₹${orderSummary.deliveryCost.toFixed(2)} (${orderSummary.deliveryStatus})` : 
+                'Delivery Unavailable';
+            
+            const paymentMethodText = orderSummary.paymentMethod === 'cod' ? 
+                'Cash on Delivery' : 
+                'Online Payment (Payment Successful)';
+
+
+            const itemsHtml = orderSummary.items.map(item => `
+                <div class="flex justify-between py-1 border-b border-gray-100">
+                    <span>${item.name} (${item.quantity}x)</span>
+                    <span class="font-medium">₹${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+            `).join('');
+
+            modalContent.innerHTML = `
+                <p class="font-semibold text-gray-700 mb-2">Order ID: <span class="text-green-700">${orderSummary.id}</span></p>
+                <p class="font-semibold text-gray-700 mb-4">Date: <span class="text-green-700">${orderSummary.date}</span></p>
+                <h4 class="font-bold text-lg text-gray-800 mb-2">Items Ordered:</h4>
+                ${itemsHtml}
+                <div class="mt-4 pt-2 border-t border-gray-300">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Subtotal:</span>
+                        <span class="font-medium">₹${(orderSummary.total - orderSummary.deliveryCost).toFixed(2)}</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>Delivery:</span>
+                        <span class="font-medium">${deliveryCostText}</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>Payment Method:</span>
+                        <span class="font-medium text-indigo-700">${paymentMethodText}</span>
+                    </div>
+                    <div class="flex justify-between text-xl font-extrabold text-green-700">
+                        <span>Total Payable:</span>
+                        <span>₹${orderSummary.total.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Re-inject the action buttons
+            const actionButtonsHtml = `
+                <div class="mt-6 flex justify-end space-x-3 modal-action-buttons">
+                    <button onclick="hideOrderSuccessModal()" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition duration-150 shadow-md">
+                        Continue Shopping
+                    </button>
+                    <button onclick="changeView('history'); hideOrderSuccessModal();" class="px-6 py-2 border border-indigo-600 text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition duration-150 shadow-md">
+                        View History
+                    </button>
+                </div>
+            `;
+            modalBody.insertAdjacentHTML('beforeend', actionButtonsHtml);
+
+            modalEl.classList.remove('hidden');
+        }
+
+        // --- 3. CART MANAGEMENT FUNCTIONS ---
+
+        /** Finds product details by ID across all categories. */
+        function getProductById(id) {
+            for (const category in PRODUCTS) {
+                const product = PRODUCTS[category].products.find(p => p.id === id);
+                if (product) {
+                    return product;
+                }
+            }
+            return null;
+        }
+
+        /** Adds an item to the cart or increments its quantity. */
+        function addToCart(productId) {
+            cart[productId] = (cart[productId] || 0) + 1;
+            updateCartCount();
+            showMessage('Item added to cart!');
+            // If the user is viewing the cart, refresh it
+            if (currentView === 'cart') {
+                renderCart();
+            }
+        }
+
+        /** Updates the quantity of an item in the cart. */
+        function updateCartQuantity(productId, quantity) {
+            const num = parseInt(quantity);
+            if (num > 0) {
+                cart[productId] = num;
+            } else {
+                delete cart[productId];
+            }
+            updateCartCount();
+            if (Object.keys(cart).length === 0 && currentView !== 'welcome') {
+                changeView('welcome');
+                showMessage('Cart is now empty. Redirecting to store.', 'error');
+                return;
+            }
+            if (currentView === 'cart' || currentView === 'checkout') {
+                // If on cart/checkout, refresh the view
+                if (currentView === 'cart') renderCart();
+                if (currentView === 'checkout') renderCheckout();
+            }
+        }
+        
+        /** NEW: Updates the global state with the selected payment method. */
+        function updatePaymentMethod(method) {
+            customerDetails.paymentMethod = method;
+        }
+
+        /** Calculates the total number of items in the cart. */
+        function getCartTotalItems() {
+            return Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
+        }
+
+        /** Calculates the subtotal price of all items in the cart. */
+        function getCartSubtotal() {
+            return Object.entries(cart).reduce((total, [id, quantity]) => {
+                const product = getProductById(id);
+                return total + (product ? product.price * quantity : 0);
+            }, 0);
+        }
+
+        /** Updates the cart count displayed in the navigation header. */
+        function updateCartCount() {
+            const totalItems = getCartTotalItems();
+            const cartBtn = document.getElementById('nav-btn-cart');
+            
+            if (cartBtn) {
+                cartBtn.querySelector('span').textContent = `Cart (${totalItems})`;
+                cartBtn.disabled = totalItems === 0;
+                if (totalItems > 0) {
+                    cartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    cartBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+            // Update history button state
+            const historyBtn = document.getElementById('nav-btn-history');
+             if (historyBtn) {
+                historyBtn.disabled = submittedOrders.length === 0;
+                if (submittedOrders.length > 0) {
+                    historyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    historyBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        // --- 4. VIEW RENDERING FUNCTIONS ---
+        
+        /** Creates a standardized navigation button. */
+        function createNavButton(label, id, iconClass, colorClass, extraClasses = '', onclick = '', disabled = false) {
+            const button = document.createElement('button');
+            button.id = `nav-btn-${id}`;
+            button.className = `flex items-center space-x-2 px-3 py-2 ${colorClass} bg-white font-semibold rounded-xl hover:shadow-lg transition duration-150 ${extraClasses}`;
+            button.innerHTML = `<i class="${iconClass}"></i><span>${label}</span>`;
+            button.onclick = new Function(onclick);
+            button.disabled = disabled;
+            return button;
+        }
+
+        /** Renders the main navigation buttons based on the current view. */
+        function renderNavigation() {
+            navButtonsEl.innerHTML = '';
+            
+            // Home/Welcome Button
+            navButtonsEl.appendChild(createNavButton(
+                'Store', 
+                'welcome', 
+                'fas fa-store', 
+                currentView === 'welcome' ? 'text-white bg-green-500 hover:bg-green-600' : 'text-green-600 hover:bg-green-50',
+                '',
+                "changeView('welcome')"
+            ));
+
+            // Cart Button
+            const totalItems = getCartTotalItems();
+            navButtonsEl.appendChild(createNavButton(
+                `Cart (${totalItems})`, 
+                'cart', 
+                'fas fa-shopping-cart', 
+                currentView === 'cart' || currentView === 'checkout' ? 'text-white bg-green-500 hover:bg-green-600' : 'text-green-600 hover:bg-green-50',
+                totalItems === 0 ? 'opacity-50 cursor-not-allowed' : '',
+                "changeView('cart')",
+                totalItems === 0
+            ));
+
+             // Order History Button
+            navButtonsEl.appendChild(createNavButton(
+                'Order History', 
+                'history', 
+                'fas fa-clipboard-list', 
+                currentView === 'history' ? 'text-white bg-indigo-600 hover:bg-indigo-700' : 'text-indigo-600 hover:bg-indigo-50',
+                submittedOrders.length === 0 ? 'opacity-50 cursor-not-allowed' : '',
+                "renderOrderHistory()",
+                submittedOrders.length === 0
+            ));
+        }
+
+        /** Renders the main product list view. */
+        function renderWelcome() {
+            currentView = 'welcome';
+            renderNavigation();
+
+            let html = '<h2 class="text-4xl font-extrabold text-green-800 mb-6 border-b-4 border-green-300 pb-2">Our Natural Product Range</h2>';
+            
+            for (const key in PRODUCTS) {
+                const category = PRODUCTS[key];
+                html += `<h3 class="text-3xl font-bold text-gray-700 mt-8 mb-4 flex items-center"><i class="${category.icon} mr-3 text-green-600"></i>${category.name}</h3>`;
+                html += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">';
+                
+                category.products.forEach(product => {
+                    // Check current quantity in cart
+                    const quantityInCart = cart[product.id] || 0;
+                    
+                    html += `
+                        <div class="bg-white rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition duration-300 border-t-4 border-green-400">
+                            <img src="${getPlaceholderImage(product.image_hint)}" alt="${product.name}" class="w-full h-40 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/150x150/dcfce7/166534?text=Herbal'">
+                            <div class="p-5">
+                                <h4 class="text-xl font-bold text-gray-800 mb-1">${product.name}</h4>
+                                <p class="text-green-700 font-extrabold text-2xl mb-3">₹${product.price.toFixed(2)}</p>
+                                <p class="text-gray-500 text-sm mb-4">${product.desc}</p>
+                                
+                                <div class="flex items-center justify-between">
+                                    <button 
+                                        onclick="addToCart('${product.id}')" 
+                                        class="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-600 transition duration-150 mr-2"
+                                    >
+                                        <i class="fas fa-cart-plus mr-2"></i>Add to Cart
+                                    </button>
+                                    ${quantityInCart > 0 ? `<span class="bg-green-100 text-green-700 text-sm font-semibold px-3 py-1.5 rounded-full">${quantityInCart} In Cart</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+
+            contentArea.innerHTML = html;
+        }
+
+        /** Renders the shopping cart view. */
+        function renderCart() {
+            currentView = 'cart';
+            renderNavigation();
+
+            const subtotal = getCartSubtotal();
+            const totalItems = getCartTotalItems();
+            const cartItems = Object.entries(cart).map(([id, quantity]) => {
+                const product = getProductById(id);
+                const itemTotal = product.price * quantity;
+
+                return `
+                    <div class="flex flex-col sm:flex-row items-center border-b border-gray-200 py-4">
+                        <!-- Image -->
+                        <img src="${getPlaceholderImage(product.image_hint)}" alt="${product.name}" class="w-16 h-16 rounded-lg object-cover mb-3 sm:mb-0 sm:mr-4">
+                        
+                        <!-- Details -->
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-lg font-bold text-gray-800 truncate">${product.name}</h4>
+                            <p class="text-sm text-gray-500">Price: ₹${product.price.toFixed(2)}</p>
+                        </div>
+
+                        <!-- Quantity Selector -->
+                        <div class="flex items-center space-x-2 my-3 sm:my-0 sm:mx-6">
+                            <button onclick="updateCartQuantity('${id}', ${quantity - 1})" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300 disabled:opacity-50" ${quantity <= 1 ? 'disabled' : ''}>
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input 
+                                type="number" 
+                                value="${quantity}" 
+                                min="1" 
+                                class="w-12 text-center border rounded-lg p-1"
+                                onchange="updateCartQuantity('${id}', this.value)"
+                            >
+                            <button onclick="updateCartQuantity('${id}', ${quantity + 1})" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-full hover:bg-gray-300">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Item Total -->
+                        <div class="w-full sm:w-auto text-right font-extrabold text-xl text-green-700 pt-2 sm:pt-0">
+                            ₹${itemTotal.toFixed(2)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            let html = `
+                <h2 class="text-4xl font-extrabold text-green-800 mb-6 border-b-4 border-green-300 pb-2 flex items-center">
+                    <i class="fas fa-shopping-cart mr-3"></i>Your Shopping Cart (${totalItems} items)
+                </h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Cart Items List (2/3 width) -->
+                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-xl">
+                        ${totalItems > 0 ? cartItems : '<p class="text-lg text-gray-500 p-8 text-center">Your cart is empty. Start shopping now!</p>'}
+                    </div>
+
+                    <!-- Summary Card (1/3 width) -->
+                    <div class="lg:col-span-1 bg-green-50 p-6 rounded-2xl shadow-xl sticky top-24 h-fit border-t-4 border-green-600">
+                        <h3 class="text-2xl font-bold text-green-800 mb-4 border-b pb-2">Order Summary</h3>
+                        <div class="flex justify-between text-lg text-gray-700 mb-2">
+                            <span>Subtotal:</span>
+                            <span class="font-bold">₹${subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="text-sm text-gray-500 mb-6">
+                            Delivery charges calculated at checkout based on Pincode.
+                        </div>
+                        <button 
+                            onclick="changeView('checkout')" 
+                            class="w-full bg-green-600 text-white py-3 rounded-xl font-extrabold text-lg hover:bg-green-700 transition duration-150 disabled:bg-gray-400"
+                            ${totalItems === 0 ? 'disabled' : ''}
+                        >
+                            <i class="fas fa-wallet mr-2"></i>Proceed to Checkout
+                        </button>
+                        <button 
+                            onclick="changeView('welcome')" 
+                            class="w-full mt-3 border border-green-500 text-green-700 py-3 rounded-xl font-semibold hover:bg-green-100 transition duration-150"
+                        >
+                            Continue Shopping
+                        </button>
+                    </div>
+                </div>
+            `;
+            contentArea.innerHTML = html;
+        }
+
+        /** Renders the checkout form and order calculation view. */
+        function renderCheckout() {
+            if (getCartTotalItems() === 0) {
+                changeView('welcome');
+                showMessage('Your cart is empty. Please add items to proceed to checkout.', 'error');
+                return;
+            }
+            
+            currentView = 'checkout';
+            renderNavigation();
+
+            const subtotal = getCartSubtotal();
+            
+            // Generate item list for summary display
+            const itemsHtml = Object.entries(cart).map(([id, quantity]) => {
+                const product = getProductById(id);
+                return `
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span class="truncate pr-2">${product.name} (x${quantity})</span>
+                        <span class="font-medium">₹${(product.price * quantity).toFixed(2)}</span>
+                    </div>
+                `;
+            }).join('');
+            
+            // Delivery Cost Display
+            const deliveryCost = customerDetails.deliveryCost;
+            const deliveryStatus = customerDetails.deliveryStatus;
+            const totalPayable = subtotal + (deliveryCost > 0 ? deliveryCost : 0);
+            
+            const deliveryHtml = deliveryCost >= 0 ? 
+                `<span class="font-bold text-green-700">₹${deliveryCost.toFixed(2)}</span>` : 
+                `<span class="font-bold text-red-500">${deliveryStatus}</span>`;
+
+            let html = `
+                <h2 class="text-4xl font-extrabold text-green-800 mb-6 border-b-4 border-green-300 pb-2 flex items-center">
+                    <i class="fas fa-wallet mr-3"></i>Secure Checkout
+                </h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Customer Details Form (2/3 width) -->
+                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-xl">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Delivery Information</h3>
+                        <form id="checkout-form" onsubmit="event.preventDefault(); submitOrder();">
+                            
+                            <!-- Personal Info -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <input type="text" id="custName" placeholder="Full Name (Required)" required value="${customerDetails.name}" class="input-field">
+                                <input type="tel" id="custPhone" pattern="[0-9]{10,15}" placeholder="Phone Number (e.g., 9003528453)" required value="${customerDetails.phone}" class="input-field">
+                            </div>
+                            <input type="email" id="custEmail" placeholder="Email Address (Optional)" value="${customerDetails.email}" class="input-field mb-4">
+
+                            <!-- Address and Pincode -->
+                            <textarea id="custAddress" placeholder="Detailed Delivery Address (Required)" required class="input-field mb-4 h-24">${customerDetails.deliveryAddress}</textarea>
+                            
+                            <div class="flex space-x-4 items-end mb-4">
+                                <div class="flex-1">
+                                    <input 
+                                        type="number" 
+                                        id="custPincode" 
+                                        placeholder="Pincode (Required)" 
+                                        required 
+                                        value="${customerDetails.deliveryPincode > 0 ? customerDetails.deliveryPincode : ''}" 
+                                        oninput="checkPincode(this.value)"
+                                        class="input-field"
+                                    >
+                                </div>
+                                <div id="pincode-status" class="flex-1 p-3 text-sm rounded-lg ${deliveryCost >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
+                                    Delivery Status: ${deliveryStatus}
+                                </div>
+                            </div>
+                            
+                            <!-- Payment Method Selection -->
+                            <div class="bg-gray-100 p-4 rounded-xl mt-6 space-y-3">
+                                <h4 class="font-bold text-lg mb-2">Select Payment Method</h4>
+                                
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="payment" value="cod" id="paymentCod" 
+                                        onchange="updatePaymentMethod('cod')" 
+                                        ${customerDetails.paymentMethod === 'cod' ? 'checked' : ''} 
+                                        class="form-radio text-green-600 focus:ring-green-500 h-5 w-5">
+                                    <span class="text-gray-700 font-medium">Cash on Delivery (COD)</span>
+                                </label>
+
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="payment" value="online" id="paymentOnline" 
+                                        onchange="updatePaymentMethod('online')" 
+                                        ${customerDetails.paymentMethod === 'online' ? 'checked' : ''} 
+                                        class="form-radio text-indigo-600 focus:ring-indigo-500 h-5 w-5">
+                                    <span class="text-gray-700 font-medium">Online Payment (Card/UPI/Wallet - Placeholder)</span>
+                                </label>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <button type="submit" id="place-order-btn" class="w-full bg-green-600 text-white py-3 rounded-xl font-extrabold text-lg hover:bg-green-700 transition duration-150 mt-6 disabled:bg-gray-400" ${deliveryCost < 0 ? 'disabled' : ''}>
+                                <i class="fas fa-check-circle mr-2"></i>Place Order (₹${totalPayable.toFixed(2)})
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Summary Card (1/3 width) -->
+                    <div class="lg:col-span-1 bg-green-50 p-6 rounded-2xl shadow-xl sticky top-24 h-fit border-t-4 border-green-600">
+                        <h3 class="text-2xl font-bold text-green-800 mb-4 border-b pb-2">Order Review</h3>
+                        <div class="space-y-2 mb-4 max-h-48 overflow-y-auto">
+                            ${itemsHtml}
+                        </div>
+                        <div class="border-t border-gray-300 pt-4 space-y-2">
+                            <div class="flex justify-between text-lg text-gray-700">
+                                <span>Item Subtotal:</span>
+                                <span class="font-bold">₹${subtotal.toFixed(2)}</span>
+                            </div>
+                            <div class="flex justify-between text-lg text-gray-700">
+                                <span>Delivery Charge:</span>
+                                ${deliveryHtml}
+                            </div>
+                            <div class="flex justify-between text-2xl font-extrabold text-green-800 pt-3 border-t border-dashed border-gray-400">
+                                <span>TOTAL PAYABLE:</span>
+                                <span>₹${totalPayable.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <button onclick="changeView('cart')" class="w-full mt-4 border border-gray-500 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-100 transition duration-150">
+                            Back to Cart
+                        </button>
+                    </div>
+                </div>
+                
+                <style>
+                    .input-field {
+                        width: 100%; 
+                        padding: 12px; 
+                        border: 1px solid #d1d5db; 
+                        border-radius: 8px; 
+                        transition: all 0.2s;
+                        outline: none;
+                        font-size: 16px;
+                    }
+                    .input-field:focus {
+                        border-color: #059669; /* Green 600 */
+                        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.3);
+                    }
+                </style>
+            `;
+            contentArea.innerHTML = html;
+        }
+        
+        /** Renders the customer's order history. */
+        function renderOrderHistory() {
+            currentView = 'history';
+            renderNavigation();
+
+            if (submittedOrders.length === 0) {
+                 contentArea.innerHTML = `
+                    <h2 class="text-4xl font-extrabold text-indigo-800 mb-6 border-b-4 border-indigo-300 pb-2 flex items-center">
+                        <i class="fas fa-clipboard-list mr-3"></i>Order History
+                    </h2>
+                    <div class="bg-white p-12 rounded-2xl shadow-xl text-center">
+                        <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+                        <h3 class="text-2xl font-bold text-gray-700 mb-2">No Past Orders Found</h3>
+                        <p class="text-gray-500 mb-6">It looks like you haven't placed any orders yet. Start shopping now!</p>
+                        <button onclick="changeView('welcome')" class="bg-green-600 text-white py-3 px-6 rounded-xl font-extrabold text-lg hover:bg-green-700 transition duration-150">
+                            Browse Products
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const ordersHtml = submittedOrders.map((order, index) => {
+                const isLatest = index === 0;
+                const paymentText = order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment';
+                const paymentColor = order.paymentMethod === 'cod' ? 'text-green-600' : 'text-indigo-600';
+                
+                const itemsList = order.items.map(item => `
+                    <li class="text-sm text-gray-600">${item.name} <span class="font-semibold text-green-700">(x${item.quantity})</span></li>
+                `).join('');
+
+                return `
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border-l-8 ${isLatest ? 'border-indigo-600' : 'border-gray-300'} hover:shadow-xl transition duration-300">
+                        <div class="flex justify-between items-start border-b pb-3 mb-3">
+                            <div>
+                                <h3 class="text-2xl font-bold ${isLatest ? 'text-indigo-700' : 'text-gray-800'}">Order ID: ${order.id}</h3>
+                                <p class="text-sm text-gray-500">Placed on: ${order.date.split(',')[0]} at ${order.date.split(',')[1].trim()}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-3xl font-extrabold text-green-700">₹${order.total.toFixed(2)}</span>
+                                <p class="text-sm text-gray-500">Total Paid</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Items -->
+                            <div>
+                                <h4 class="font-bold text-gray-700 mb-2">Items (${order.items.length})</h4>
+                                <ul class="list-disc list-inside space-y-1">
+                                    ${itemsList}
+                                </ul>
+                            </div>
+                            <!-- Shipping & Payment -->
+                            <div>
+                                <h4 class="font-bold text-gray-700 mb-2">Shipping & Payment</h4>
+                                <p class="text-sm text-gray-600">Pincode: <span class="font-semibold">${order.customer.deliveryPincode}</span></p>
+                                <p class="text-sm text-gray-600">Delivery Cost: <span class="font-semibold">₹${order.deliveryCost.toFixed(2)}</span></p>
+                                <p class="text-sm text-gray-600">Payment: <span class="font-semibold ${paymentColor}">${paymentText}</span></p>
+                            </div>
+                            <!-- Customer Info -->
+                            <div>
+                                <h4 class="font-bold text-gray-700 mb-2">Customer Info</h4>
+                                <p class="text-sm text-gray-600">${order.customer.name}</p>
+                                <p class="text-sm text-gray-600">${order.customer.phone}</p>
+                                <p class="text-sm text-gray-600">${order.customer.deliveryAddress.substring(0, 50)}...</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+
+            const html = `
+                <h2 class="text-4xl font-extrabold text-indigo-800 mb-6 border-b-4 border-indigo-300 pb-2 flex items-center">
+                    <i class="fas fa-clipboard-list mr-3"></i>Your Order History (${submittedOrders.length} Orders)
+                </h2>
+                <div class="space-y-6">
+                    ${ordersHtml}
+                </div>
+            `;
+            contentArea.innerHTML = html;
+        }
+
+        // --- 5. CHECKOUT/ORDER FUNCTIONS ---
+
+        /** Updates the delivery cost status when the Pincode input changes. */
+        function checkPincode(pincode) {
+            const pinNum = parseInt(pincode);
+            const statusEl = document.getElementById('pincode-status');
+            const placeOrderBtn = document.getElementById('place-order-btn');
+            
+            let status = { cost: OUT_OF_RANGE_COST, status: 'No Pincode Entered' };
+            
+            if (pincode.length === 6 && pinNum >= 100000 && pinNum <= 999999) {
+                status = calculateDeliveryCost(pinNum);
+            } else if (pincode.length > 0) {
+                 status = { cost: OUT_OF_RANGE_COST, status: 'Invalid Pincode Format' };
+            }
+
+            customerDetails.deliveryPincode = pinNum;
+            customerDetails.deliveryCost = status.cost;
+            customerDetails.deliveryStatus = status.status;
+            
+            const subtotal = getCartSubtotal();
+            const totalPayable = subtotal + (status.cost > 0 ? status.cost : 0);
+
+            // Update UI elements
+            statusEl.textContent = `Delivery Status: ${status.status}`;
+            statusEl.className = `flex-1 p-3 text-sm rounded-lg font-semibold ${status.cost >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            
+            placeOrderBtn.disabled = status.cost < 0;
+            placeOrderBtn.textContent = `Place Order (₹${totalPayable.toFixed(2)})`;
+        }
+
+
+        /** Processes the form submission and "places" the order. */
+        function submitOrder() {
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const email = document.getElementById('custEmail').value.trim();
+            const address = document.getElementById('custAddress').value.trim();
+            const pincode = document.getElementById('custPincode').value.trim();
+            const selectedPayment = document.querySelector('input[name="payment"]:checked')?.value || 'cod';
+            
+            if (!name || !phone || !address || !pincode) {
+                showMessage('Please fill in all required fields.', 'error');
+                return;
+            }
+            if (customerDetails.deliveryCost < 0) {
+                showMessage('Delivery is unavailable for this Pincode.', 'error');
+                return;
+            }
+
+            // 1. Update persisted customer details
+            customerDetails.name = name;
+            customerDetails.phone = phone;
+            customerDetails.email = email;
+            customerDetails.deliveryAddress = address;
+            customerDetails.paymentMethod = selectedPayment; // NEW: Save selected method
+
+            // 2. Prepare order items
+            const subtotal = getCartSubtotal();
+            const totalPrice = subtotal + customerDetails.deliveryCost;
+            
+            const orderItems = Object.entries(cart).map(([id, quantity]) => {
+                const product = getProductById(id);
+                return {
+                    name: product.name,
+                    price: product.price,
+                    quantity: quantity
+                };
+            });
+
+            // 3. Create the order summary object
+            const now = new Date();
+            const orderSummary = {
+                id: 'VS-' + now.getFullYear().toString().slice(-2) + Math.floor(Math.random() * 9000 + 1000), // e.g., VS-24xxxx
+                date: now.toLocaleString('en-IN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                total: totalPrice,
+                deliveryCost: customerDetails.deliveryCost,
+                deliveryStatus: customerDetails.deliveryStatus,
+                paymentMethod: customerDetails.paymentMethod, // NEW: Add payment method to order
+                customer: { ...customerDetails }, // Copy of current customer state
+                items: orderItems,
+            };
+
+            // 4. Save the order to history
+            submittedOrders.unshift(orderSummary); // Add to the front
+
+            // 5. Show success message/modal
+            showMessage('Order placed successfully!', 'success');
+            showOrderSuccessModal(orderSummary);
+        }
+
+        // --- 6. CORE APP INITIALIZATION ---
+
+        /** Changes the main view of the application. */
+        function changeView(viewName) {
+            currentView = viewName;
+            switch (viewName) {
+                case 'welcome':
+                    renderWelcome();
+                    break;
+                case 'cart':
+                    renderCart();
+                    break;
+                case 'checkout':
+                    renderCheckout();
+                    break;
+                case 'history':
+                    renderOrderHistory();
+                    break;
+                default:
+                    renderWelcome();
+            }
+        }
+        
+        // Initial load
+        window.onload = () => {
+            changeView(currentView);
+            updateCartCount(); // Initializes nav button states
+        };
+
+    </script>
+</body>
+</html>
